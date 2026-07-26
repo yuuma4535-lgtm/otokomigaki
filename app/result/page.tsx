@@ -7,9 +7,11 @@ import {
   getOgDescriptionForType,
   getSiteOrigin,
   getTypeNameForShare,
+  getTypeOgImagePath,
   getTypeOgImages,
   OGP_IMAGE_PATH,
   parseResultTypeId,
+  toAbsoluteUrl,
 } from "@/lib/diagnosis/share-og";
 
 type ResultPageProps = {
@@ -27,7 +29,9 @@ export async function generateMetadata({
     const title = "診断結果 | 男磨き診断";
     const description = DEFAULT_OG_DESCRIPTION;
     const pageUrl = `${origin}/result`;
+    const images = getCommonOgImages(origin);
     return {
+      metadataBase: new URL(origin),
       title,
       description,
       alternates: { canonical: pageUrl },
@@ -38,13 +42,13 @@ export async function generateMetadata({
         siteName: "男磨き診断",
         locale: "ja_JP",
         type: "website",
-        images: getCommonOgImages(),
+        images,
       },
       twitter: {
         card: "summary_large_image",
         title: "男磨き診断",
         description,
-        images: [OGP_IMAGE_PATH],
+        images: [toAbsoluteUrl(OGP_IMAGE_PATH, origin)],
       },
     };
   }
@@ -53,9 +57,11 @@ export async function generateMetadata({
   const title = `『${typeName}』| 男磨き診断`;
   const description = getOgDescriptionForType(typeId);
   const pageUrl = buildShareResultUrl(origin, typeId);
-  const images = getTypeOgImages(typeId);
+  const images = getTypeOgImages(typeId, origin);
+  const imageUrl = toAbsoluteUrl(getTypeOgImagePath(typeId), origin);
 
   return {
+    metadataBase: new URL(origin),
     title,
     description,
     alternates: { canonical: pageUrl },
@@ -72,7 +78,7 @@ export async function generateMetadata({
       card: "summary_large_image",
       title,
       description,
-      images: [images[0].url],
+      images: [imageUrl],
     },
   };
 }

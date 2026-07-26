@@ -6,7 +6,7 @@ import {
 } from "@/lib/diagnosis/share-og";
 import type { DiagnosisResult } from "@/types/diagnosis";
 
-/** Web Share API 用テキスト（タイプ固有の紹介文。URLは別フィールドで渡す） */
+/** Web Share API 用テキスト（タイプ固有の紹介文。URLは ShareButtons 側で1回だけ付与） */
 export function buildShareText(
   result: Pick<DiagnosisResult, "typeId" | "typeName">,
   _siteOrigin: string,

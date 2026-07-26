@@ -1,16 +1,17 @@
-import { getTypePngSrc, getTypeVisual } from "@/lib/diagnosis/type-visuals";
+import { getTypeVisual } from "@/lib/diagnosis/type-visuals";
 import { RELATIVE_TYPES } from "@/lib/diagnosis/relative-types";
 import type { ResultTypeId } from "@/types/diagnosis";
 
-/** サイト共通 OGP（タイプ未指定時） */
+/** サイト共通 OGP（タイプ未指定時）— PNG（LINE等のクローラ向け） */
 export const OGP_IMAGE_PATH = "/ogp.png";
 export const OGP_IMAGE_ALT = "男磨き診断";
 export const OGP_IMAGE_WIDTH = 1024;
 export const OGP_IMAGE_HEIGHT = 538;
 
-/** タイプ別エンブレム OGP の表示サイズ（実ファイルに合わせる） */
-export const TYPE_OGP_IMAGE_WIDTH = 960;
-export const TYPE_OGP_IMAGE_HEIGHT = 524;
+/** タイプ別 OGP（public/images/og/*.png） */
+export const TYPE_OG_IMAGES_DIR = "/images/og";
+export const TYPE_OGP_IMAGE_WIDTH = 1200;
+export const TYPE_OGP_IMAGE_HEIGHT = 630;
 
 const DEFAULT_SITE_URL = "http://localhost:3000";
 
@@ -20,6 +21,16 @@ export function getSiteOrigin(): string {
     process.env.NEXT_PUBLIC_SITE_URL?.trim() ||
     (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "");
   return (fromEnv || DEFAULT_SITE_URL).replace(/\/$/, "");
+}
+
+/** 相対パスを絶対URLに変換（og:image 用） */
+export function toAbsoluteUrl(pathname: string, origin = getSiteOrigin()): string {
+  if (pathname.startsWith("http://") || pathname.startsWith("https://")) {
+    return pathname;
+  }
+  const base = origin.replace(/\/$/, "");
+  const path = pathname.startsWith("/") ? pathname : `/${pathname}`;
+  return `${base}${path}`;
 }
 
 const SPECIAL_TYPE_NAMES: Record<"supreme" | "prototype", string> = {
@@ -98,7 +109,7 @@ export function buildShareResultUrl(origin: string, typeId: ResultTypeId): strin
   return `${base}/result?type=${encodeURIComponent(typeId)}`;
 }
 
-/** Web Share 用本文（URLは navigator.share の url に任せ、重複を避ける） */
+/** Web Share 用本文（URLは呼び出し側で1回だけ付与する） */
 export function buildTypeShareMessage(typeId: ResultTypeId): string {
   const typeName = getTypeNameForShare(typeId);
   const catchphrase = getTypeVisual(typeId).catchphrase;
@@ -106,27 +117,34 @@ export function buildTypeShareMessage(typeId: ResultTypeId): string {
   return `私の男磨きタイプは『${typeName}』でした。\n${catchphrase}\n\n${pitch}\n#男磨き診断`;
 }
 
+/** タイプ別 OGP 画像パス（LINE対応の PNG） */
+export function getTypeOgImagePath(typeId: ResultTypeId): string {
+  return `${TYPE_OG_IMAGES_DIR}/${typeId}.png`;
+}
+
 /** openGraph / twitter 用の共通画像設定 */
-export function getCommonOgImages() {
+export function getCommonOgImages(origin = getSiteOrigin()) {
   return [
     {
-      url: OGP_IMAGE_PATH,
+      url: toAbsoluteUrl(OGP_IMAGE_PATH, origin),
       width: OGP_IMAGE_WIDTH,
       height: OGP_IMAGE_HEIGHT,
       alt: OGP_IMAGE_ALT,
+      type: "image/png",
     },
   ];
 }
 
-/** タイプ別エンブレムを og:image に使う */
-export function getTypeOgImages(typeId: ResultTypeId) {
+/** タイプ別エンブレムを og:image に使う（絶対URL・PNG） */
+export function getTypeOgImages(typeId: ResultTypeId, origin = getSiteOrigin()) {
   const typeName = getTypeNameForShare(typeId);
   return [
     {
-      url: getTypePngSrc(typeId),
+      url: toAbsoluteUrl(getTypeOgImagePath(typeId), origin),
       width: TYPE_OGP_IMAGE_WIDTH,
       height: TYPE_OGP_IMAGE_HEIGHT,
       alt: `男磨き診断『${typeName}』`,
+      type: "image/png",
     },
   ];
 }

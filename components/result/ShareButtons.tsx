@@ -70,11 +70,12 @@ export function ShareButtons({ result }: ShareButtonsProps) {
   const handleShare = useCallback(async () => {
     const origin = siteOrigin || window.location.origin;
     const shareUrl = buildShareResultUrl(origin, result.typeId);
-    const text = buildShareText(result, origin);
+    // LINE等は text と url の両方を渡すとURLが二重になるため、
+    // 本文にURLを1回だけ含めて url フィールドは渡さない
+    const text = `${buildShareText(result, origin)}\n\n${shareUrl}`;
     const shareData: ShareData = {
       title: `『${result.typeName}』| 男磨き診断`,
       text,
-      url: shareUrl,
     };
 
     if (typeof navigator.share !== "function") {
