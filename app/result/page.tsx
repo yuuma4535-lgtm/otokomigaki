@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
 import { ResultView } from "@/components/result/ResultView";
 import {
+  buildShareResultUrl,
   DEFAULT_OG_DESCRIPTION,
   getCommonOgImages,
   getOgDescriptionForType,
+  getSiteOrigin,
   getTypeNameForShare,
+  getTypeOgImages,
   OGP_IMAGE_PATH,
   parseResultTypeId,
 } from "@/lib/diagnosis/share-og";
@@ -18,24 +21,28 @@ export async function generateMetadata({
 }: ResultPageProps): Promise<Metadata> {
   const params = await searchParams;
   const typeId = parseResultTypeId(params.type);
-  const images = getCommonOgImages();
+  const origin = getSiteOrigin();
 
   if (!typeId) {
     const title = "診断結果 | 男磨き診断";
     const description = DEFAULT_OG_DESCRIPTION;
+    const pageUrl = `${origin}/result`;
     return {
       title,
       description,
+      alternates: { canonical: pageUrl },
       openGraph: {
-        title,
+        title: "男磨き診断",
         description,
-        images,
-        type: "website",
+        url: pageUrl,
         siteName: "男磨き診断",
+        locale: "ja_JP",
+        type: "website",
+        images: getCommonOgImages(),
       },
       twitter: {
         card: "summary_large_image",
-        title,
+        title: "男磨き診断",
         description,
         images: [OGP_IMAGE_PATH],
       },
@@ -45,22 +52,27 @@ export async function generateMetadata({
   const typeName = getTypeNameForShare(typeId);
   const title = `『${typeName}』| 男磨き診断`;
   const description = getOgDescriptionForType(typeId);
+  const pageUrl = buildShareResultUrl(origin, typeId);
+  const images = getTypeOgImages(typeId);
 
   return {
     title,
     description,
+    alternates: { canonical: pageUrl },
     openGraph: {
       title,
       description,
-      images,
-      type: "website",
+      url: pageUrl,
       siteName: "男磨き診断",
+      locale: "ja_JP",
+      type: "website",
+      images,
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
-      images: [OGP_IMAGE_PATH],
+      images: [images[0].url],
     },
   };
 }

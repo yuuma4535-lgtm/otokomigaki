@@ -72,7 +72,7 @@ export function ShareButtons({ result }: ShareButtonsProps) {
     const shareUrl = buildShareResultUrl(origin, result.typeId);
     const text = buildShareText(result, origin);
     const shareData: ShareData = {
-      title: "男磨き診断",
+      title: `『${result.typeName}』| 男磨き診断`,
       text,
       url: shareUrl,
     };

@@ -15,20 +15,20 @@ type TypeSymbolProps = {
 };
 
 /**
- * 中央アイコン: `{typeId}.png` を優先。
+ * 中央アイコン: `{typeId}.webp` を優先。
  * 親の円形クリップ内で object-fit: cover し、四角い黒背景を見せない。
  * mix-blend-mode は使わない（タッチ／スクロール阻害の原因になるため）。
  */
 export function TypeSymbol({ typeId, alt, className = "" }: TypeSymbolProps) {
-  const pngSrc = getTypePngSrc(typeId);
+  const primarySrc = getTypePngSrc(typeId);
   const svgSrc = getTypeSvgSrc(typeId);
-  const [src, setSrc] = useState(pngSrc);
+  const [src, setSrc] = useState(primarySrc);
 
   useEffect(() => {
-    setSrc(pngSrc);
-  }, [pngSrc]);
+    setSrc(primarySrc);
+  }, [primarySrc]);
 
-  const isPng = src.endsWith(".png");
+  const isRaster = !src.endsWith(".svg");
 
   return (
     // eslint-disable-next-line @next/next/no-img-element
@@ -38,26 +38,28 @@ export function TypeSymbol({ typeId, alt, className = "" }: TypeSymbolProps) {
       alt={alt}
       width={220}
       height={220}
+      fetchPriority="high"
+      loading="eager"
       decoding="async"
       draggable={false}
       className={[
         "pointer-events-none block h-full w-full rounded-full object-center",
-        isPng ? "object-cover" : "object-contain p-[10%]",
+        isRaster ? "object-cover" : "object-contain p-[10%]",
         className,
       ]
         .filter(Boolean)
         .join(" ")}
       style={{
         borderRadius: "50%",
-        objectFit: isPng ? "cover" : "contain",
+        objectFit: isRaster ? "cover" : "contain",
         objectPosition: "center",
         pointerEvents: "none",
-        // 横長 PNG の余白黒を円内で最小化
-        ...(isPng ? { transform: "scale(1.08)" } : null),
+        // 横長画像の余白黒を円内で最小化
+        ...(isRaster ? { transform: "scale(1.08)" } : null),
       }}
       onError={() => {
         setSrc((current) => {
-          if (current === pngSrc) return svgSrc;
+          if (current === primarySrc) return svgSrc;
           if (current === svgSrc) return DEFAULT_TYPE_SYMBOL;
           return current;
         });

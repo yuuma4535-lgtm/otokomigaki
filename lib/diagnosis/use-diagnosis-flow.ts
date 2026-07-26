@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import { QUESTIONS_PER_PAGE } from "@/lib/diagnosis/constants";
 import { getOrderedQuestions } from "@/lib/diagnosis/questions-data";
 import type { Answers, Question } from "@/types/diagnosis";
@@ -32,7 +31,6 @@ function isPageComplete(pageQuestions: Question[], answers: Answers): boolean {
 
 /** 診断の進行管理（ページ単位 + 回答マップ） */
 export function useDiagnosisFlow(questionsPerPage = QUESTIONS_PER_PAGE) {
-  const router = useRouter();
   const questions = useMemo(() => getOrderedQuestions(), []);
   const pages = useMemo(
     () => chunkQuestions(questions, questionsPerPage),
@@ -76,30 +74,12 @@ export function useDiagnosisFlow(questionsPerPage = QUESTIONS_PER_PAGE) {
     });
   }, []);
 
-  const persistAndFinish = useCallback(
-    (nextAnswers: Answers) => {
-      try {
-        sessionStorage.setItem(
-          "otokomigaki.answers",
-          JSON.stringify(nextAnswers),
-        );
-      } catch {
-        /* private mode 等 */
-      }
-      router.push("/result");
-    },
-    [router],
-  );
-
+  /** 次ページへ（最終ページの結果遷移は DiagnosisWizard 側で行う） */
   const goNext = useCallback(() => {
     const { pageIndex: current, answers } = flowRef.current;
     const pageQuestions = pages[current] ?? [];
     if (!isPageComplete(pageQuestions, answers)) return;
-
-    if (current >= pages.length - 1) {
-      persistAndFinish(answers);
-      return;
-    }
+    if (current >= pages.length - 1) return;
 
     setFlow((prev) => {
       const next: FlowState = {
@@ -109,7 +89,7 @@ export function useDiagnosisFlow(questionsPerPage = QUESTIONS_PER_PAGE) {
       flowRef.current = next;
       return next;
     });
-  }, [pages, persistAndFinish]);
+  }, [pages]);
 
   const goBack = useCallback(() => {
     setFlow((prev) => {

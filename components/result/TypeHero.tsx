@@ -1,8 +1,13 @@
 "use client";
 
 import type { CSSProperties } from "react";
+import { preload } from "react-dom";
 import { TypeSymbol } from "@/components/result/TypeSymbol";
-import { getTypeVisual } from "@/lib/diagnosis/type-visuals";
+import {
+  EMBLEM_FRAME_SRC,
+  getTypePngSrc,
+  getTypeVisual,
+} from "@/lib/diagnosis/type-visuals";
 import type { DiagnosisResult } from "@/types/diagnosis";
 
 type TypeHeroProps = {
@@ -16,6 +21,10 @@ type TypeHeroProps = {
  */
 export function TypeHero({ result }: TypeHeroProps) {
   const visual = getTypeVisual(result.typeId);
+
+  // エンブレムを LCP として優先取得（デザイン・ロジックは変更しない）
+  preload(getTypePngSrc(result.typeId), { as: "image" });
+  preload(EMBLEM_FRAME_SRC, { as: "image" });
 
   return (
     <section
@@ -79,10 +88,11 @@ export function TypeHero({ result }: TypeHeroProps) {
         */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/images/types/emblem-frame.png"
+          src={EMBLEM_FRAME_SRC}
           alt=""
-          width={606}
-          height={601}
+          width={420}
+          height={417}
+          loading="eager"
           decoding="async"
           draggable={false}
           className="pointer-events-none absolute inset-0 z-[1] h-full w-full origin-center scale-[1.16] object-contain opacity-90"

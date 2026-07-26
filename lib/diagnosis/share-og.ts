@@ -1,12 +1,16 @@
-import { getTypeVisual } from "@/lib/diagnosis/type-visuals";
+import { getTypePngSrc, getTypeVisual } from "@/lib/diagnosis/type-visuals";
 import { RELATIVE_TYPES } from "@/lib/diagnosis/relative-types";
 import type { ResultTypeId } from "@/types/diagnosis";
 
-/** 共通 OGP サムネイル（どの結果URLでも同じ画像） */
-export const OGP_IMAGE_PATH = "/images/ogp-banner.png";
+/** サイト共通 OGP（タイプ未指定時） */
+export const OGP_IMAGE_PATH = "/ogp.png";
 export const OGP_IMAGE_ALT = "男磨き診断";
-export const OGP_IMAGE_WIDTH = 1200;
-export const OGP_IMAGE_HEIGHT = 630;
+export const OGP_IMAGE_WIDTH = 1024;
+export const OGP_IMAGE_HEIGHT = 538;
+
+/** タイプ別エンブレム OGP の表示サイズ（実ファイルに合わせる） */
+export const TYPE_OGP_IMAGE_WIDTH = 960;
+export const TYPE_OGP_IMAGE_HEIGHT = 524;
 
 const DEFAULT_SITE_URL = "http://localhost:3000";
 
@@ -94,15 +98,12 @@ export function buildShareResultUrl(origin: string, typeId: ResultTypeId): strin
   return `${base}/result?type=${encodeURIComponent(typeId)}`;
 }
 
-/** Web Share / ツイート本文 */
-export function buildTypeShareMessage(
-  typeId: ResultTypeId,
-  shareUrl: string,
-): string {
+/** Web Share 用本文（URLは navigator.share の url に任せ、重複を避ける） */
+export function buildTypeShareMessage(typeId: ResultTypeId): string {
   const typeName = getTypeNameForShare(typeId);
   const catchphrase = getTypeVisual(typeId).catchphrase;
   const pitch = getOgDescriptionForType(typeId);
-  return `私の男磨きタイプは『${typeName}』でした。\n${catchphrase}\n\n${pitch}\n\n診断はこちら: ${shareUrl}\n#男磨き診断`;
+  return `私の男磨きタイプは『${typeName}』でした。\n${catchphrase}\n\n${pitch}\n#男磨き診断`;
 }
 
 /** openGraph / twitter 用の共通画像設定 */
@@ -113,6 +114,19 @@ export function getCommonOgImages() {
       width: OGP_IMAGE_WIDTH,
       height: OGP_IMAGE_HEIGHT,
       alt: OGP_IMAGE_ALT,
+    },
+  ];
+}
+
+/** タイプ別エンブレムを og:image に使う */
+export function getTypeOgImages(typeId: ResultTypeId) {
+  const typeName = getTypeNameForShare(typeId);
+  return [
+    {
+      url: getTypePngSrc(typeId),
+      width: TYPE_OGP_IMAGE_WIDTH,
+      height: TYPE_OGP_IMAGE_HEIGHT,
+      alt: `男磨き診断『${typeName}』`,
     },
   ];
 }

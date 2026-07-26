@@ -7,13 +7,18 @@ import "./globals.css";
 const body = Noto_Sans_JP({
   variable: "--font-body",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "500", "600"],
+  display: "swap",
+  preload: true,
 });
 
 const display = Shippori_Mincho({
   variable: "--font-display",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  // display は見出し中心。未使用の 600/700 を外し、初回 preload 量を抑える
+  weight: ["400", "500"],
+  display: "swap",
+  preload: false,
 });
 
 const defaultTitle = "男磨き診断 | Otokomigaki";

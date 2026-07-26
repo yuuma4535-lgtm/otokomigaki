@@ -19,12 +19,15 @@ export type TypeVisualMeta = {
 /** タイプ画像の公開ディレクトリ（`public/images/types/`） */
 export const TYPE_IMAGES_DIR = "/images/types";
 
-/** PNG 未配置時の共通プレースホルダー */
+/** 画像未配置時の共通プレースホルダー */
 export const DEFAULT_TYPE_SYMBOL = `${TYPE_IMAGES_DIR}/_default.svg`;
 
-/** タイプID → PNG パス（本番アセット） */
+/** 装飾枠（WebP） */
+export const EMBLEM_FRAME_SRC = `${TYPE_IMAGES_DIR}/emblem-frame.webp`;
+
+/** タイプID → エンブレム画像パス（軽量 WebP） */
 export function getTypePngSrc(typeId: ResultTypeId): string {
-  return `${TYPE_IMAGES_DIR}/${typeId}.png`;
+  return `${TYPE_IMAGES_DIR}/${typeId}.webp`;
 }
 
 /** タイプID → 線画 SVG（暫定フォールバック） */
@@ -34,7 +37,7 @@ export function getTypeSvgSrc(typeId: ResultTypeId): string {
 
 /**
  * 16タイプのビジュアルメタデータ。
- * 中央アイコンは `{typeId}.png` を優先読み込み（なければ SVG / _default）。
+ * 中央アイコンは `{typeId}.webp` を優先読み込み（なければ SVG / _default）。
  */
 export const TYPE_VISUALS: Record<ResultTypeId, TypeVisualMeta> = {
   supreme: {

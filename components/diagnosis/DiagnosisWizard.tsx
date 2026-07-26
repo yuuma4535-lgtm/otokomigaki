@@ -1,6 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { ResultPreparingScreen } from "@/components/diagnosis/ResultPreparingScreen";
 import { PageAtmosphere } from "@/components/ui/PageAtmosphere";
 import { LIKERT_SCALE } from "@/lib/diagnosis/constants";
 import { questionsDataset } from "@/lib/diagnosis/questions-data";
@@ -123,6 +125,9 @@ function QuestionBlock({
 
 /** 診断ウィザード（複数問 / ページ + 次へ・戻る） */
 export function DiagnosisWizard() {
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+
   const {
     currentPageQuestions,
     pageIndex,
@@ -144,6 +149,7 @@ export function DiagnosisWizard() {
   const answersRef = useRef(answers);
   answersRef.current = answers;
   const scrollTimerRef = useRef<number | null>(null);
+  const loadingTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -153,6 +159,9 @@ export function DiagnosisWizard() {
     return () => {
       if (scrollTimerRef.current !== null) {
         window.clearTimeout(scrollTimerRef.current);
+      }
+      if (loadingTimerRef.current !== null) {
+        window.clearTimeout(loadingTimerRef.current);
       }
     };
   }, []);
@@ -183,6 +192,39 @@ export function DiagnosisWizard() {
     },
     [currentPageQuestions, setAnswer],
   );
+
+  /** 「結果を見る」: isLoading → 1.5秒表示 → /result へ */
+  const handleFinishClick = useCallback(() => {
+    if (!canGoNext || isLoading) return;
+
+    setIsLoading(true);
+
+    try {
+      sessionStorage.setItem(
+        "otokomigaki.answers",
+        JSON.stringify(answersRef.current),
+      );
+    } catch {
+      /* private mode 等 */
+    }
+
+    loadingTimerRef.current = window.setTimeout(() => {
+      loadingTimerRef.current = null;
+      router.push("/result");
+    }, 1500);
+  }, [canGoNext, isLoading, router]);
+
+  const handlePrimaryClick = useCallback(() => {
+    if (isLastPage) {
+      handleFinishClick();
+      return;
+    }
+    goNext();
+  }, [goNext, handleFinishClick, isLastPage]);
+
+  if (isLoading) {
+    return <ResultPreparingScreen />;
+  }
 
   if (pageCount === 0 || currentPageQuestions.length === 0) {
     return null;
@@ -241,8 +283,8 @@ export function DiagnosisWizard() {
           <button
             id="diagnosis-next-action"
             type="button"
-            onClick={goNext}
-            disabled={!canGoNext}
+            onClick={handlePrimaryClick}
+            disabled={!canGoNext || isLoading}
             className="ui-button-primary relative z-10 min-h-12 flex-1 scroll-mt-24 touch-manipulation disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
           >
             {isLastPage ? "結果を見る" : "次へ"}

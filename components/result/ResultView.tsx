@@ -1,14 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState, type CSSProperties } from "react";
+import dynamic from "next/dynamic";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { ResultPreparingScreen } from "@/components/diagnosis/ResultPreparingScreen";
 import { CategoryAdviceGrid } from "@/components/result/CategoryAdviceGrid";
 import { CategoryLevelBars } from "@/components/result/CategoryLevelBars";
-import { CategoryRadarChart } from "@/components/result/CategoryRadarChart";
 import { DebugResultPanel } from "@/components/result/DebugResultPanel";
 import { FirstStepSection } from "@/components/result/FirstStepSection";
 import { RelativeInsight } from "@/components/result/RelativeInsight";
-import { ResultCardDownload } from "@/components/result/ResultCardDownload";
 import { ShareButtons } from "@/components/result/ShareButtons";
 import { TypeHero } from "@/components/result/TypeHero";
 import { LuxuryButton } from "@/components/ui/LuxuryButton";
@@ -18,9 +18,28 @@ import { buildDiagnosisResult } from "@/lib/diagnosis/score";
 import { getTypeVisual } from "@/lib/diagnosis/type-visuals";
 import type { Answers, DiagnosisResult } from "@/types/diagnosis";
 
+/** 重いチャート／Canvas を遅延し、エンブレム画像の取得・描画を優先 */
+const CategoryRadarChart = dynamic(
+  () =>
+    import("@/components/result/CategoryRadarChart").then((m) => ({
+      default: m.CategoryRadarChart,
+    })),
+  { ssr: false },
+);
+
+const ResultCardDownload = dynamic(
+  () =>
+    import("@/components/result/ResultCardDownload").then((m) => ({
+      default: m.ResultCardDownload,
+    })),
+  { ssr: false },
+);
+
 export function ResultView() {
+  const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<DiagnosisResult | null>(null);
   const [missing, setMissing] = useState(false);
+  const loadTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     try {
@@ -37,10 +56,34 @@ export function ResultView() {
     }
   }, []);
 
+  useEffect(() => {
+    return () => {
+      if (loadTimerRef.current !== null) {
+        window.clearTimeout(loadTimerRef.current);
+      }
+    };
+  }, []);
+
+  /** デバッグ切替: isLoading → 1.5秒 → 結果表示 */
   const applyDebugResult = (next: DiagnosisResult) => {
-    setResult(next);
+    if (loadTimerRef.current !== null) {
+      window.clearTimeout(loadTimerRef.current);
+    }
+
     setMissing(false);
+    setResult(null);
+    setIsLoading(true);
+
+    loadTimerRef.current = window.setTimeout(() => {
+      setResult(next);
+      setIsLoading(false);
+      loadTimerRef.current = null;
+    }, 1500);
   };
+
+  if (isLoading) {
+    return <ResultPreparingScreen />;
+  }
 
   if (missing && !result) {
     return (

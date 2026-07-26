@@ -6,13 +6,12 @@ import {
 } from "@/lib/diagnosis/share-og";
 import type { DiagnosisResult } from "@/types/diagnosis";
 
-/** Web Share API 用テキスト（タイプ固有の紹介文） */
+/** Web Share API 用テキスト（タイプ固有の紹介文。URLは別フィールドで渡す） */
 export function buildShareText(
   result: Pick<DiagnosisResult, "typeId" | "typeName">,
-  siteOrigin: string,
+  _siteOrigin: string,
 ): string {
-  const shareUrl = buildShareResultUrl(siteOrigin, result.typeId);
-  return buildTypeShareMessage(result.typeId, shareUrl);
+  return buildTypeShareMessage(result.typeId);
 }
 
 /** クリップボードコピー用テキスト */

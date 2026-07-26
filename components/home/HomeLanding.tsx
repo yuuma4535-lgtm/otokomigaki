@@ -61,6 +61,7 @@ function CtaButton({ className = "" }: { className?: string }) {
   return (
     <LuxuryButton
       href="/diagnose"
+      prefetch={false}
       className={`group w-full max-w-full touch-manipulation sm:w-auto ${className}`}
     >
       診断を始める

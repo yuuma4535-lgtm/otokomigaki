@@ -16,6 +16,8 @@ type LuxuryButtonProps =
       href: string;
       target?: string;
       rel?: string;
+      /** Next.js Link の prefetch。未指定時はデフォルト動作 */
+      prefetch?: boolean;
     });
 
 function cx(...parts: Array<string | false | undefined>) {
@@ -36,6 +38,7 @@ export function LuxuryButton(props: LuxuryButtonProps) {
         href={props.href}
         target={props.target}
         rel={props.rel}
+        prefetch={props.prefetch}
         className={cx(base, className)}
       >
         {children}
