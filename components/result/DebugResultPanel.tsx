@@ -6,6 +6,7 @@ import {
   createSupremeAnswers,
 } from "@/lib/diagnosis/debug-answers";
 import { buildDiagnosisResult } from "@/lib/diagnosis/score";
+import { useShowDebugUi } from "@/lib/diagnosis/use-show-debug-ui";
 import type { DiagnosisResult } from "@/types/diagnosis";
 
 type DebugResultPanelProps = {
@@ -17,8 +18,11 @@ type DebugResultPanelProps = {
  * - 至高：全99%
  * - 原石：全10%
  * - ランダム：20〜97%（14タイプ検証）
+ * 本番では ?debug=1 のときのみ表示
  */
 export function DebugResultPanel({ onApply }: DebugResultPanelProps) {
+  const showDebug = useShowDebugUi();
+
   const apply = (factory: () => ReturnType<typeof createSupremeAnswers>) => {
     const answers = factory();
     const result = buildDiagnosisResult(answers);
@@ -26,6 +30,8 @@ export function DebugResultPanel({ onApply }: DebugResultPanelProps) {
     sessionStorage.setItem("otokomigaki.diagnosisCompleted", "1");
     onApply(result);
   };
+
+  if (!showDebug) return null;
 
   return (
     <div className="pointer-events-auto fixed bottom-[max(0.75rem,env(safe-area-inset-bottom))] right-2 z-40 flex max-w-[11rem] flex-col gap-1.5 rounded-md border border-line bg-void/95 p-2 shadow-[var(--shadow-panel)] backdrop-blur-sm sm:right-3 sm:max-w-[13rem]">

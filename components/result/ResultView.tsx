@@ -17,6 +17,7 @@ import { PageAtmosphere } from "@/components/ui/PageAtmosphere";
 import { COCONALA_URL } from "@/lib/diagnosis/constants";
 import { buildDiagnosisResult } from "@/lib/diagnosis/score";
 import { getTypeVisual } from "@/lib/diagnosis/type-visuals";
+import { useShowDebugUi } from "@/lib/diagnosis/use-show-debug-ui";
 import type { Answers, DiagnosisResult } from "@/types/diagnosis";
 
 /** 診断完了後のみ結果表示を許可するフラグ */
@@ -50,6 +51,7 @@ function markDiagnosisCompleted() {
 
 export function ResultView() {
   const router = useRouter();
+  const showDebug = useShowDebugUi();
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<DiagnosisResult | null>(null);
   const [missing, setMissing] = useState(false);
@@ -63,7 +65,10 @@ export function ResultView() {
       const shareType = new URLSearchParams(window.location.search).get("type");
 
       // 共有リンク（?type=）直アクセスで診断未完了ならトップへ誘導
-      if (shareType && (!raw || !completed)) {
+      // （?debug=1 のときはデバッグ用に結果ページへ留まる）
+      const debugParam =
+        new URLSearchParams(window.location.search).get("debug") === "1";
+      if (shareType && (!raw || !completed) && !debugParam) {
         setIsRedirecting(true);
         router.replace("/");
         return;
@@ -130,9 +135,11 @@ export function ResultView() {
           <p className="font-display text-lg text-ivory">
             診断データが見つかりません。
           </p>
-          <p className="mt-3 text-sm text-muted">
-            右下の Debug で各ランクを検証できます。
-          </p>
+          {showDebug ? (
+            <p className="mt-3 text-sm text-muted">
+              右下の Debug で各ランクを検証できます。
+            </p>
+          ) : null}
           <Link
             href="/"
             className="mt-8 text-sm tracking-[0.2em] text-gold hover:text-gold-soft"
