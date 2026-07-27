@@ -17,7 +17,10 @@ import { PageAtmosphere } from "@/components/ui/PageAtmosphere";
 import { COCONALA_URL } from "@/lib/diagnosis/constants";
 import { buildDiagnosisResult } from "@/lib/diagnosis/score";
 import { getTypeVisual } from "@/lib/diagnosis/type-visuals";
-import { useShowDebugUi } from "@/lib/diagnosis/use-show-debug-ui";
+import {
+  isDebugFlagEnabled,
+  useShowDebugUi,
+} from "@/lib/diagnosis/use-show-debug-ui";
 import type { Answers, DiagnosisResult } from "@/types/diagnosis";
 
 /** 診断完了後のみ結果表示を許可するフラグ */
@@ -63,11 +66,12 @@ export function ResultView() {
       const raw = sessionStorage.getItem(ANSWERS_KEY);
       const completed = sessionStorage.getItem(DIAGNOSIS_COMPLETED_KEY) === "1";
       const shareType = new URLSearchParams(window.location.search).get("type");
+      const debugParam = isDebugFlagEnabled(
+        new URLSearchParams(window.location.search).get("debug"),
+      );
 
       // 共有リンク（?type=）直アクセスで診断未完了ならトップへ誘導
       // （?debug=1 のときはデバッグ用に結果ページへ留まる）
-      const debugParam =
-        new URLSearchParams(window.location.search).get("debug") === "1";
       if (shareType && (!raw || !completed) && !debugParam) {
         setIsRedirecting(true);
         router.replace("/");

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { ResultView } from "@/components/result/ResultView";
 import {
   buildShareResultUrl,
@@ -15,8 +16,11 @@ import {
 } from "@/lib/diagnosis/share-og";
 
 type ResultPageProps = {
-  searchParams: Promise<{ type?: string | string[] }>;
+  searchParams: Promise<{ type?: string | string[]; debug?: string | string[] }>;
 };
+
+/** クエリ（type / debug）を確実に扱う */
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   searchParams,
@@ -86,5 +90,15 @@ export async function generateMetadata({
 }
 
 export default function ResultPage() {
-  return <ResultView />;
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-dvh items-center justify-center bg-void text-muted">
+          読み込み中…
+        </div>
+      }
+    >
+      <ResultView />
+    </Suspense>
+  );
 }
