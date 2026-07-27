@@ -23,6 +23,7 @@ export function DebugResultPanel({ onApply }: DebugResultPanelProps) {
     const answers = factory();
     const result = buildDiagnosisResult(answers);
     sessionStorage.setItem("otokomigaki.answers", JSON.stringify(answers));
+    sessionStorage.setItem("otokomigaki.diagnosisCompleted", "1");
     onApply(result);
   };
 

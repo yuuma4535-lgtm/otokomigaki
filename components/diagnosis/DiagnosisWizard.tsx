@@ -204,6 +204,7 @@ export function DiagnosisWizard() {
         "otokomigaki.answers",
         JSON.stringify(answersRef.current),
       );
+      sessionStorage.setItem("otokomigaki.diagnosisCompleted", "1");
     } catch {
       /* private mode 等 */
     }
