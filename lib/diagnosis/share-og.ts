@@ -8,19 +8,34 @@ export const OGP_IMAGE_ALT = "男磨き診断";
 export const OGP_IMAGE_WIDTH = 1024;
 export const OGP_IMAGE_HEIGHT = 538;
 
-/** タイプ別 OGP（public/images/og/*.png） */
-export const TYPE_OG_IMAGES_DIR = "/images/og";
+/** タイプ別 OGP（public/images/ogp_{typeId}.png） */
 export const TYPE_OGP_IMAGE_WIDTH = 1200;
 export const TYPE_OGP_IMAGE_HEIGHT = 630;
 
 const DEFAULT_SITE_URL = "http://localhost:3000";
 
-/** metadataBase / 絶対URL用 */
+/**
+ * metadataBase / 絶対URL用。
+ * VERCEL_URL はデプロイごとの一時ホストのため、SNSクローラが画像を取れない。
+ * 本番では安定ドメイン（NEXT_PUBLIC_SITE_URL / VERCEL_PROJECT_PRODUCTION_URL）を優先する。
+ */
 export function getSiteOrigin(): string {
-  const fromEnv =
-    process.env.NEXT_PUBLIC_SITE_URL?.trim() ||
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "");
-  return (fromEnv || DEFAULT_SITE_URL).replace(/\/$/, "");
+  const explicit = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  if (explicit) return explicit.replace(/\/$/, "");
+
+  const productionHost = process.env.VERCEL_PROJECT_PRODUCTION_URL?.trim();
+  if (productionHost) {
+    const host = productionHost.replace(/^https?:\/\//, "");
+    return `https://${host}`.replace(/\/$/, "");
+  }
+
+  const vercelUrl = process.env.VERCEL_URL?.trim();
+  if (vercelUrl) {
+    const host = vercelUrl.replace(/^https?:\/\//, "");
+    return `https://${host}`.replace(/\/$/, "");
+  }
+
+  return DEFAULT_SITE_URL;
 }
 
 /** 相対パスを絶対URLに変換（og:image 用） */
@@ -119,7 +134,7 @@ export function buildTypeShareMessage(typeId: ResultTypeId): string {
 
 /** タイプ別 OGP 画像パス（LINE対応の PNG） */
 export function getTypeOgImagePath(typeId: ResultTypeId): string {
-  return `${TYPE_OG_IMAGES_DIR}/${typeId}.png`;
+  return `/images/ogp_${typeId}.png`;
 }
 
 /** openGraph / twitter 用の共通画像設定 */

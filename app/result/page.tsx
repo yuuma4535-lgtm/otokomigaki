@@ -24,14 +24,15 @@ export async function generateMetadata({
   const params = await searchParams;
   const typeId = parseResultTypeId(params.type);
   const origin = getSiteOrigin();
+  const metadataBase = new URL(`${origin}/`);
 
   if (!typeId) {
     const title = "診断結果 | 男磨き診断";
     const description = DEFAULT_OG_DESCRIPTION;
     const pageUrl = `${origin}/result`;
-    const images = getCommonOgImages(origin);
+    const imageUrl = toAbsoluteUrl(OGP_IMAGE_PATH, origin);
     return {
-      metadataBase: new URL(origin),
+      metadataBase,
       title,
       description,
       alternates: { canonical: pageUrl },
@@ -42,13 +43,13 @@ export async function generateMetadata({
         siteName: "男磨き診断",
         locale: "ja_JP",
         type: "website",
-        images,
+        images: getCommonOgImages(origin),
       },
       twitter: {
         card: "summary_large_image",
         title: "男磨き診断",
         description,
-        images: [toAbsoluteUrl(OGP_IMAGE_PATH, origin)],
+        images: [imageUrl],
       },
     };
   }
@@ -57,11 +58,12 @@ export async function generateMetadata({
   const title = `『${typeName}』| 男磨き診断`;
   const description = getOgDescriptionForType(typeId);
   const pageUrl = buildShareResultUrl(origin, typeId);
+  const imagePath = getTypeOgImagePath(typeId);
+  const imageUrl = toAbsoluteUrl(imagePath, origin);
   const images = getTypeOgImages(typeId, origin);
-  const imageUrl = toAbsoluteUrl(getTypeOgImagePath(typeId), origin);
 
   return {
-    metadataBase: new URL(origin),
+    metadataBase,
     title,
     description,
     alternates: { canonical: pageUrl },
