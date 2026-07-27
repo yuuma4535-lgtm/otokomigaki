@@ -1,8 +1,7 @@
 import type { LikertChoice } from "@/types/diagnosis";
 
-/** ココナラ導線URL（本番では実際のサービスURLに差し替え） */
-export const COCONALA_URL =
-  "https://coconala.com/categories/1?ref=otokomigaki";
+/** ココナラ導線URL */
+export const COCONALA_URL = "https://coconala.com/services/4317364";
 
 export const TOTAL_QUESTIONS = 70;
 export const MAX_CHOICE_SCORE = 5;

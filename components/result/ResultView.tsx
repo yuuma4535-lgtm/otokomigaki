@@ -212,7 +212,7 @@ export function ResultView() {
 
           <div className="relative flex w-full min-w-0 flex-col items-center gap-5 border-t border-line pt-10 text-center sm:pt-12">
             <p className="max-w-sm px-1 text-sm leading-[1.9] text-ivory-soft">
-              専門家と一緒に、次の一歩を確実なものに。
+              一緒に、次の一歩を確実なものに。
             </p>
             <div className="flex w-full max-w-xs flex-col items-center gap-4 px-0">
               <LuxuryButton
