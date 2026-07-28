@@ -3,7 +3,14 @@ import { Analytics } from "@vercel/analytics/next";
 import { Noto_Sans_JP, Shippori_Mincho } from "next/font/google";
 import { Suspense } from "react";
 import { GlobalDebugJumpMenu } from "@/components/debug/GlobalDebugJumpMenu";
-import { getSiteOrigin } from "@/lib/diagnosis/share-og";
+import {
+  getSiteOrigin,
+  OGP_IMAGE_ALT,
+  OGP_IMAGE_HEIGHT,
+  OGP_IMAGE_PATH,
+  OGP_IMAGE_WIDTH,
+  toAbsoluteUrl,
+} from "@/lib/diagnosis/share-og";
 import "./globals.css";
 
 const body = Noto_Sans_JP({
@@ -26,7 +33,11 @@ const display = Shippori_Mincho({
 const defaultTitle = "男磨き診断 | Otokomigaki";
 const ogTitle = "男磨き診断";
 const ogDescription = "あなたの内なる支配者を目覚めさせろ";
-const ogImageUrl = "https://otokomigaki-delta.vercel.app/ogp.png";
+/** public/ogp.png — サイト共通 OGP（SNSクローラ向けに本番絶対URL） */
+const ogImageUrl = toAbsoluteUrl(
+  OGP_IMAGE_PATH,
+  "https://otokomigaki-delta.vercel.app",
+);
 
 export const metadata: Metadata = {
   metadataBase: new URL(getSiteOrigin()),
@@ -41,9 +52,9 @@ export const metadata: Metadata = {
     images: [
       {
         url: ogImageUrl,
-        width: 1024,
-        height: 538,
-        alt: ogTitle,
+        width: OGP_IMAGE_WIDTH,
+        height: OGP_IMAGE_HEIGHT,
+        alt: OGP_IMAGE_ALT,
       },
     ],
   },
