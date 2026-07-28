@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Analytics } from "@vercel/analytics/next";
 import { Noto_Sans_JP, Shippori_Mincho } from "next/font/google";
+import { Suspense } from "react";
+import { GlobalDebugJumpMenu } from "@/components/debug/GlobalDebugJumpMenu";
 import { getSiteOrigin } from "@/lib/diagnosis/share-og";
 import "./globals.css";
 
@@ -70,6 +72,9 @@ export default function RootLayout({
     >
       <body className="font-sans">
         {children}
+        <Suspense fallback={null}>
+          <GlobalDebugJumpMenu />
+        </Suspense>
         <Analytics />
       </body>
     </html>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 
 /** debug クエリの許容値（1 / true / yes / on） */
 export function isDebugFlagEnabled(value: string | null | undefined): boolean {
@@ -18,35 +19,41 @@ export function isDebugFlagEnabled(value: string | null | undefined): boolean {
   }
 }
 
+/** クライアントの URL から ?debug= を確実に読む */
+export function readDebugFlagFromWindow(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return isDebugFlagEnabled(
+      new URLSearchParams(window.location.search).get("debug"),
+    );
+  } catch {
+    return false;
+  }
+}
+
 /**
  * デバッグUIの表示可否。
- * - 開発環境: 常に表示
- * - 本番等: ?debug=1（または true 等）のときのみ表示
+ * - 開発環境（NODE_ENV === 'development'）: 常に表示
+ * - 本番等: URL に ?debug=1（または true / yes / on）があるときのみ表示
  *
- * useSearchParams で App Router のクエリを確実に読む。
+ * useSearchParams と window.location.search の両方で判定し、
+ * どちらかで拾えれば表示する（クライアントで確実に反映）。
+ *
+ * 呼び出し側は Suspense 境界内に置くこと（useSearchParams 要件）。
  */
 export function useShowDebugUi(): boolean {
   const searchParams = useSearchParams();
+  const [fromWindow, setFromWindow] = useState(false);
 
-  try {
-    if (process.env.NODE_ENV === "development") {
-      return true;
-    }
+  useEffect(() => {
+    setFromWindow(readDebugFlagFromWindow());
+  }, [searchParams]);
 
-    if (isDebugFlagEnabled(searchParams.get("debug"))) {
-      return true;
-    }
-
-    // 念のためのフォールバック（一部環境で searchParams が空の場合）
-    if (typeof window !== "undefined") {
-      const fromLocation = new URLSearchParams(window.location.search).get(
-        "debug",
-      );
-      return isDebugFlagEnabled(fromLocation);
-    }
-
-    return false;
-  } catch {
-    return process.env.NODE_ENV === "development";
+  if (process.env.NODE_ENV === "development") {
+    return true;
   }
+
+  return (
+    isDebugFlagEnabled(searchParams.get("debug")) || fromWindow
+  );
 }

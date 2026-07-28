@@ -1,8 +1,58 @@
 import questionsData from "@/data/questions.json";
 import { AXIS_ORDER } from "@/lib/diagnosis/personality-types";
-import type { Answers, CategoryId, QuestionsData } from "@/types/diagnosis";
+import {
+  RELATIVE_TYPES,
+  type RelativeTypeId,
+} from "@/lib/diagnosis/relative-types";
+import type {
+  Answers,
+  CategoryId,
+  QuestionsData,
+  ResultTypeId,
+} from "@/types/diagnosis";
 
 const data = questionsData as QuestionsData;
+
+const CODE_TO_CATEGORY: Record<"P" | "S" | "D" | "M", CategoryId> = {
+  P: "physique",
+  S: "appearance",
+  D: "lifestyle",
+  M: "mind",
+};
+
+/** 14タイプ → 軸順列コード（高い順）。relative-types の PATTERN_TO_TYPE の逆 */
+const TYPE_TO_PATTERN: Record<RelativeTypeId, string> = {
+  steel_embodiment: "PSDM",
+  pioneering_frontier: "PMDS",
+  refined_warrior: "SPDM",
+  solitary_aesthetic: "SDPM",
+  flawless_routiner: "DPMS",
+  silent_strategist: "DSMP",
+  evolution_seeker: "MPDS",
+  intellectual_builder: "MDSP",
+  unyielding_hardworker: "PDSM",
+  charismatic_innovator: "SMPD",
+  ironclad_logical: "DMPS",
+  refined_philosopher: "MSDP",
+  passionate_artist: "PMSD",
+  disciplined_tank: "DPSM",
+};
+
+/** Rank B 帯（21〜97）の固定スコア。高い順でタイプ判定を安定させる */
+const RANK_B_ORDERED_SCORES = [90, 70, 50, 30] as const;
+
+/** デバッグ用：全結果タイプへのジャンプ一覧 */
+export const DEBUG_RESULT_JUMP_TARGETS: ReadonlyArray<{
+  id: ResultTypeId;
+  label: string;
+}> = [
+  { id: "supreme", label: "至高の支配者" },
+  { id: "prototype", label: "原石のプロトタイプ" },
+  ...Object.values(RELATIVE_TYPES).map((t) => ({
+    id: t.id as ResultTypeId,
+    label: t.typeName,
+  })),
+];
 
 /**
  * 正規化スコア（0〜100）に近づくよう、カテゴリ内の Likert 回答を配分する。
@@ -73,6 +123,30 @@ export function generateRandomCategoryScores(): Record<CategoryId, number> {
 
 export function createMixedAnswers(): Answers {
   return fillAnswersFromNormalizedScores(generateRandomCategoryScores());
+}
+
+/**
+ * 指定タイプになるよう回答を生成する（デバッグジャンプ用）。
+ * supreme / prototype は全軸固定、それ以外は軸順列で Rank B を再現。
+ */
+export function createAnswersForType(typeId: ResultTypeId): Answers {
+  if (typeId === "supreme") return createSupremeAnswers();
+  if (typeId === "prototype") return createPrototypeAnswers();
+
+  const pattern = TYPE_TO_PATTERN[typeId];
+  const byCategory = {
+    physique: 50,
+    appearance: 50,
+    lifestyle: 50,
+    mind: 50,
+  } satisfies Record<CategoryId, number>;
+
+  for (let i = 0; i < pattern.length; i++) {
+    const code = pattern[i] as "P" | "S" | "D" | "M";
+    byCategory[CODE_TO_CATEGORY[code]] = RANK_B_ORDERED_SCORES[i]!;
+  }
+
+  return fillAnswersFromNormalizedScores(byCategory);
 }
 
 /** @deprecated 互換エイリアス */
