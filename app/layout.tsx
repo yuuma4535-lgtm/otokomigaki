@@ -26,7 +26,7 @@ const display = Shippori_Mincho({
 const defaultTitle = "男磨き診断 | Otokomigaki";
 const ogTitle = "男磨き診断";
 const ogDescription = "あなたの内なる支配者を目覚めさせろ";
-const ogImagePath = "/ogp.png";
+const ogImageUrl = "https://otokomigaki-delta.vercel.app/ogp.png";
 
 export const metadata: Metadata = {
   metadataBase: new URL(getSiteOrigin()),
@@ -40,7 +40,7 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: ogImagePath,
+        url: ogImageUrl,
         width: 1024,
         height: 538,
         alt: ogTitle,
@@ -51,7 +51,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: ogTitle,
     description: ogDescription,
-    images: [ogImagePath],
+    images: [ogImageUrl],
   },
 };
 
