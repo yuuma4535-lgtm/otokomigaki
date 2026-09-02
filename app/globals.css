@@ -187,6 +187,21 @@ body {
   filter: brightness(0.98);
 }
 
+.ui-button-primary-micro {
+  transition:
+    transform 0.45s cubic-bezier(0, 0, 0.2, 1),
+    filter 0.28s ease,
+    box-shadow 0.28s ease;
+}
+
+.ui-button-primary-micro:hover {
+  transform: translateY(-1px) scale(1.03);
+}
+
+.ui-button-primary-micro:active {
+  transform: translateY(0) scale(1.02);
+}
+
 .ui-button-choice {
   width: 100%;
   max-width: 100%;

@@ -10,6 +10,7 @@ import { CategoryLevelBars } from "@/components/result/CategoryLevelBars";
 import { DebugResultPanel } from "@/components/result/DebugResultPanel";
 import { FirstStepSection } from "@/components/result/FirstStepSection";
 import { RelativeInsight } from "@/components/result/RelativeInsight";
+import { ResultReveal } from "@/components/result/ResultReveal";
 import { ShareButtons } from "@/components/result/ShareButtons";
 import { TypeHero } from "@/components/result/TypeHero";
 import { LuxuryButton } from "@/components/ui/LuxuryButton";
@@ -187,29 +188,37 @@ export function ResultView() {
     >
       <DebugResultPanel onApply={(r) => applyDebugResult(r)} />
 
-      <div className="relative mx-auto flex w-full max-w-3xl min-w-0 flex-col gap-12 px-4 py-12 sm:gap-20 sm:px-8 sm:py-24">
-        <TypeHero result={result} />
+      <div className="relative mx-auto flex w-full max-w-3xl min-w-0 flex-col gap-[4.5rem] px-4 py-12 sm:gap-[7.5rem] sm:px-8 sm:py-24">
+        <ResultReveal>
+          <TypeHero result={result} />
+        </ResultReveal>
 
         <section className="w-full">
           <div
-            className="rounded-md border bg-charcoal-raised/60 px-3 py-8 shadow-[var(--shadow-panel)] sm:px-6 sm:py-10"
+            className="rounded-md border bg-charcoal-raised/60 px-3 py-10 shadow-[var(--shadow-panel)] sm:px-6 sm:py-12"
             style={{
               borderColor:
-                "color-mix(in srgb, var(--type-accent) 45%, rgba(235,230,220,0.1))",
+                "color-mix(in srgb, var(--type-accent) 28%, rgba(235,230,220,0.1))",
               boxShadow: `0 24px 48px -28px rgba(0,0,0,0.65), 0 0 40px -18px var(--type-accent-glow)`,
             }}
           >
-            <p
-              className="text-center text-[0.7rem] tracking-[0.28em]"
-              style={{ color: "var(--type-accent-soft)" }}
-            >
-              4軸バランス（0〜100%）
-            </p>
-            <div className="mt-4">
-              <CategoryRadarChart scores={result.categoryScores} />
-            </div>
-            <RelativeInsight result={result} />
-            <CategoryLevelBars scores={result.categoryScores} />
+            <ResultReveal delayMs={0}>
+              <p className="text-center text-[0.7rem] tracking-[0.28em] text-muted-dim">
+                4軸バランス（0〜100%）
+              </p>
+              <div className="mt-4">
+                <CategoryRadarChart scores={result.categoryScores} />
+              </div>
+            </ResultReveal>
+            <ResultReveal delayMs={250}>
+              <RelativeInsight result={result} />
+            </ResultReveal>
+            <ResultReveal delayMs={500}>
+              <CategoryLevelBars
+                scores={result.categoryScores}
+                weakestId={result.growthAxis.categoryId}
+              />
+            </ResultReveal>
           </div>
 
           <CategoryAdviceGrid
@@ -218,19 +227,32 @@ export function ResultView() {
           />
         </section>
 
-        <section className="flex w-full flex-col gap-12">
+        <section className="flex w-full flex-col gap-[4.5rem]">
           <FirstStepSection firstStep={result.firstStep} />
 
-          <div className="relative flex w-full min-w-0 flex-col items-center gap-5 border-t border-line pt-10 text-center sm:pt-12">
-            <p className="max-w-sm px-1 text-sm leading-[1.9] text-ivory-soft">
-              一緒に、次の一歩を確実なものに。
-            </p>
-            <div className="flex w-full max-w-xs flex-col items-center gap-4 px-0">
+          <ResultReveal delayMs={0}>
+            <div className="relative flex w-full min-w-0 flex-col items-center gap-5 border-t border-line px-2 py-10 text-center sm:px-4 sm:py-14">
+            <div className="flex max-w-sm flex-col gap-3 px-1">
+              <p className="text-xs leading-[1.9] text-muted sm:text-sm">
+                70問、約10分をかけてここまで辿り着いたあなたへ。
+              </p>
+              <p className="text-xs leading-[1.9] text-muted sm:text-sm">
+                このまま向き合わずにいると、他の軸の伸びしろも頭打ちになります。
+              </p>
+              <p className="text-sm leading-[1.9] text-ivory-soft">
+                一緒に、次の一歩を確実なものに。
+              </p>
+              <p className="text-xs leading-[1.9] text-muted sm:text-sm">
+                一人で悩まず、一緒に次の一歩を進めましょう。
+              </p>
+            </div>
+            <div className="flex w-full max-w-xs flex-col items-center gap-4 px-0 py-4 sm:py-6">
               <LuxuryButton
                 href={COCONALA_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full max-w-full"
+                microInteraction
+                className="w-full max-w-full shadow-[0_0_32px_-10px_rgba(184,148,61,0.45)]"
               >
                 ココナラで相談する
               </LuxuryButton>
@@ -238,7 +260,8 @@ export function ResultView() {
                 もう一度診断する
               </LuxuryButton>
             </div>
-          </div>
+            </div>
+          </ResultReveal>
 
           <ResultCardDownload result={result} />
           <ShareButtons result={result} />

@@ -33,7 +33,7 @@ function ShareToast({ message, visible }: { message: string; visible: boolean })
 }
 
 const btnClass =
-  "pointer-events-auto relative z-10 min-h-12 w-full touch-manipulation rounded-sm border border-line bg-charcoal-raised/80 px-3 py-3.5 text-sm tracking-[0.1em] text-ivory-soft shadow-[var(--shadow-button)] transition-[border-color,background-color,color] hover:border-gold/40 hover:bg-charcoal-raised hover:text-gold-soft active:scale-[0.98] sm:min-h-[3rem] sm:px-4 sm:tracking-[0.12em]";
+  "pointer-events-auto relative z-10 min-h-12 w-full touch-manipulation rounded-sm border border-gold/30 bg-charcoal-raised/90 px-3 py-3.5 text-sm tracking-[0.1em] text-ivory-soft shadow-[0_0_0_1px_rgba(184,148,61,0.08),var(--shadow-button)] transition-[border-color,background-color,color] hover:border-gold/50 hover:bg-gold/8 hover:text-gold-soft active:scale-[0.98] sm:min-h-[3rem] sm:px-4 sm:tracking-[0.12em]";
 
 export function ShareButtons({ result }: ShareButtonsProps) {
   const [siteOrigin, setSiteOrigin] = useState("");

@@ -1,6 +1,9 @@
 "use client";
 
+import { CountUpPercent } from "@/components/result/CountUpPercent";
+import { useInViewOnce } from "@/lib/hooks/use-in-view-once";
 import type { CategoryScore } from "@/types/diagnosis";
+import { resolveCategoryReflectionPrompt } from "@/lib/diagnosis/personality-types";
 
 type CategoryAdviceGridProps = {
   scores: CategoryScore[];
@@ -52,35 +55,66 @@ export function CategoryAdviceGrid({
   scores,
   weakestId,
 }: CategoryAdviceGridProps) {
+  const { ref, inView } = useInViewOnce<HTMLDivElement>();
+
   return (
-    <div className="mt-10">
-      <p className="text-center text-[0.7rem] tracking-[0.28em] text-muted-dim">
+    <div ref={ref} className="mt-[3.75rem]">
+      <p
+        className="text-center text-[0.7rem] tracking-[0.28em] text-muted-dim"
+        style={{
+          opacity: inView ? 1 : 0,
+          transform: inView ? "translateY(0)" : "translateY(20px)",
+          transition:
+            "opacity 1.1s cubic-bezier(0, 0, 0.2, 1), transform 1.1s cubic-bezier(0, 0, 0.2, 1)",
+        }}
+      >
         カテゴリ別アドバイス
       </p>
       <ul className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {scores.map((cat) => {
+        {scores.map((cat, index) => {
           const isWeakest = cat.categoryId === weakestId;
+          const staggerMs = 200 + index * 250;
           return (
             <li
               key={cat.categoryId}
               className={`flex flex-col rounded-md border bg-charcoal/50 px-4 py-5 ${
                 isWeakest
-                  ? "border-gold/40"
+                  ? "border-[#c9a066]/45 bg-[#c9a066]/6 shadow-[0_0_20px_-10px_rgba(201,160,102,0.3)]"
                   : "border-line"
               }`}
+              style={{
+                opacity: inView ? 1 : 0,
+                transform: inView ? "translateY(0)" : "translateY(20px)",
+                transition: `opacity 1.1s cubic-bezier(0, 0, 0.2, 1) ${staggerMs}ms, transform 1.1s cubic-bezier(0, 0, 0.2, 1) ${staggerMs}ms`,
+              }}
             >
-              <div className="flex items-center gap-2 text-gold-soft">
-                <span className="flex h-7 w-7 items-center justify-center rounded-sm border border-gold/30">
+              <div
+                className={`flex items-center gap-2 ${
+                  isWeakest ? "text-[#c9a066]" : "text-muted-dim"
+                }`}
+              >
+                <span
+                  className={`flex h-7 w-7 items-center justify-center rounded-sm border ${
+                    isWeakest ? "border-[#c9a066]/40" : "border-line"
+                  }`}
+                >
                   <AxisIcon code={cat.axisCode} />
                 </span>
-                <h3 className="font-display text-sm tracking-[0.14em] text-ivory">
+                <h3 className="font-display text-sm tracking-[0.14em] text-ivory-soft">
                   {cat.axisName}
                 </h3>
               </div>
               <div className="mt-3 flex items-baseline justify-between gap-2">
-                <p className="font-display text-sm tabular-nums tracking-wide text-gold">
-                  {cat.score}%
-                </p>
+                <CountUpPercent
+                  value={cat.score}
+                  active={inView}
+                  className={`font-display tabular-nums tracking-wide ${
+                    isWeakest
+                      ? "text-base font-medium text-[#c9a066]"
+                      : "text-sm text-gold-soft/55"
+                  }`}
+                  delayMs={staggerMs}
+                />
                 <p className="text-[0.65rem] text-muted-dim">
                   Lv{cat.grade} · {cat.gradeLabel}
                 </p>
@@ -88,6 +122,9 @@ export function CategoryAdviceGrid({
               <div className="ui-hairline mt-3 opacity-70" />
               <p className="mt-3 flex-1 text-sm leading-[1.75] text-muted">
                 {cat.feedback}
+              </p>
+              <p className="mt-2 text-sm leading-[1.75] text-muted-dim">
+                {resolveCategoryReflectionPrompt(cat.categoryId)}
               </p>
             </li>
           );

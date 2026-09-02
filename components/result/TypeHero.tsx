@@ -28,7 +28,7 @@ export function TypeHero({ result }: TypeHeroProps) {
 
   return (
     <section
-      className="w-full min-w-0 text-center animate-[heroFade_1s_ease_both]"
+      className="w-full min-w-0 py-8 text-center animate-[heroFade_1s_ease_both] sm:py-12"
       style={
         {
           "--type-accent": visual.accent,
@@ -37,10 +37,7 @@ export function TypeHero({ result }: TypeHeroProps) {
         } as CSSProperties
       }
     >
-      <p
-        className="font-display text-[0.7rem] tracking-[0.36em]"
-        style={{ color: "var(--type-accent)" }}
-      >
+      <p className="font-display text-[0.7rem] tracking-[0.36em] text-muted-dim">
         診断結果
       </p>
 
@@ -100,24 +97,18 @@ export function TypeHero({ result }: TypeHeroProps) {
         />
       </div>
 
-      <p className="mt-8 text-[0.95rem] tracking-wide text-ivory-soft">あなたは</p>
-      <h1
-        className="mt-3 break-keep px-1 font-display text-[clamp(1.45rem,6.5vw,2.75rem)] font-medium leading-tight tracking-[0.06em] sm:tracking-[0.08em]"
-        style={{ color: "var(--type-accent-soft)" }}
-      >
+      <p className="mt-10 text-[0.95rem] tracking-wide text-muted sm:mt-12">あなたは</p>
+      <h1 className="mt-4 break-keep px-1 font-display text-[clamp(1.45rem,6.5vw,2.75rem)] font-medium leading-tight tracking-[0.06em] text-gold sm:mt-5 sm:tracking-[0.08em]">
         『{result.typeName}』
       </h1>
-      <p className="mt-3 text-[0.95rem] tracking-wide text-ivory-soft">です。</p>
+      <p className="mt-4 text-[0.95rem] tracking-wide text-muted sm:mt-5">です。</p>
 
-      <p
-        className="mx-auto mt-6 max-w-sm font-display text-sm leading-[1.9] tracking-wide sm:text-base"
-        style={{ color: "var(--type-accent)" }}
-      >
+      <p className="mx-auto mt-8 max-w-sm font-display text-sm leading-[1.9] tracking-wide text-muted-dim sm:text-base">
         {visual.catchphrase}
       </p>
 
       <div
-        className="mx-auto mt-8 h-px w-20"
+        className="mx-auto mt-10 h-px w-20 opacity-60"
         style={{
           background:
             "linear-gradient(90deg, transparent, var(--type-accent), transparent)",
@@ -125,7 +116,7 @@ export function TypeHero({ result }: TypeHeroProps) {
         aria-hidden
       />
 
-      <p className="mx-auto mt-8 max-w-md text-[0.95rem] leading-[2] text-muted">
+      <p className="mx-auto mt-10 max-w-md text-[0.95rem] leading-[2] text-muted sm:mt-12">
         {result.typeDescription}
       </p>
     </section>

@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
 import {
   PolarAngleAxis,
   PolarGrid,
@@ -9,6 +10,7 @@ import {
   ResponsiveContainer,
   Tooltip,
 } from "recharts";
+import { useInViewOnce } from "@/lib/hooks/use-in-view-once";
 import type { CategoryScore } from "@/types/diagnosis";
 
 type CategoryRadarChartProps = {
@@ -36,7 +38,7 @@ function ChartTooltip({
   return (
     <div className="rounded-sm border border-line bg-charcoal/95 px-3.5 py-2.5 text-xs tracking-wide shadow-[var(--shadow-panel)] backdrop-blur-sm">
       <p className="text-muted">{item.category}</p>
-      <p className="mt-1 font-medium tabular-nums text-gold">
+      <p className="mt-1 font-medium tabular-nums text-gold-soft/70">
         {item.score}
         <span className="text-muted-dim">%</span>
       </p>
@@ -46,19 +48,42 @@ function ChartTooltip({
 }
 
 export function CategoryRadarChart({ scores }: CategoryRadarChartProps) {
-  const data: RadarDatum[] = scores.map((s) => ({
-    category: s.axisName,
-    score: s.score,
-    gradeLabel: s.gradeLabel,
-    fullMark: 100,
-  }));
+  const { ref, inView } = useInViewOnce<HTMLDivElement>();
+  const [showScoreHelp, setShowScoreHelp] = useState(false);
+
+  const targetData = useMemo<RadarDatum[]>(
+    () =>
+      scores.map((s) => ({
+        category: s.axisName,
+        score: s.score,
+        gradeLabel: s.gradeLabel,
+        fullMark: 100,
+      })),
+    [scores],
+  );
+
+  const zeroData = useMemo(
+    () => targetData.map((d) => ({ ...d, score: 0 })),
+    [targetData],
+  );
+
+  const [chartData, setChartData] = useState(zeroData);
+
+  useEffect(() => {
+    if (inView) {
+      setChartData(targetData);
+    }
+  }, [inView, targetData]);
 
   return (
-    <div className="mx-auto h-[280px] w-full max-w-md sm:h-[340px]">
+    <div
+      ref={ref}
+      className="mx-auto h-[280px] w-full max-w-md sm:h-[340px]"
+    >
       <ResponsiveContainer width="100%" height="100%">
-        <RadarChart cx="50%" cy="52%" outerRadius="62%" data={data}>
+        <RadarChart cx="50%" cy="52%" outerRadius="62%" data={chartData}>
           <PolarGrid
-            stroke="rgba(184,148,61,0.22)"
+            stroke="rgba(184,148,61,0.12)"
             gridType="polygon"
             radialLines
           />
@@ -76,24 +101,38 @@ export function CategoryRadarChart({ scores }: CategoryRadarChartProps) {
             ticks={[0, 25, 50, 75, 100]}
             tickFormatter={(v: number) => (v === 0 ? "" : `${v}%`)}
             axisLine={false}
-            tick={{ fill: "#d4b56a", fontSize: 10, fontWeight: 500 }}
+            tick={{ fill: "#8a857c", fontSize: 10, fontWeight: 500 }}
           />
           <Radar
             name="スコア"
             dataKey="score"
-            stroke="#b8943d"
+            stroke="#9a7d42"
             fill="#6e2f3d"
-            fillOpacity={0.35}
-            strokeWidth={2}
-            isAnimationActive
-            animationDuration={1000}
+            fillOpacity={0.28}
+            strokeWidth={1.75}
+            isAnimationActive={inView}
+            animationDuration={2000}
+            animationEasing="ease-out"
           />
           <Tooltip content={<ChartTooltip />} />
         </RadarChart>
       </ResponsiveContainer>
-      <p className="mt-1 text-center text-[0.65rem] tracking-wide text-muted-dim">
-        各軸は0〜100点（カテゴリ平均の正規化スコア）
-      </p>
+      <div className="mt-1 flex flex-col items-center gap-1.5">
+        <button
+          type="button"
+          onClick={() => setShowScoreHelp((open) => !open)}
+          aria-expanded={showScoreHelp}
+          aria-label="スコア算出方法を表示"
+          className="flex h-5 w-5 items-center justify-center rounded-full border border-line text-[0.65rem] tracking-wide text-muted-dim transition-colors hover:border-gold/35 hover:text-gold-soft"
+        >
+          ?
+        </button>
+        {showScoreHelp ? (
+          <p className="max-w-xs text-center text-[0.65rem] leading-relaxed tracking-wide text-muted-dim">
+            各軸は0〜100点（カテゴリ平均の正規化スコア）
+          </p>
+        ) : null}
+      </div>
     </div>
   );
 }

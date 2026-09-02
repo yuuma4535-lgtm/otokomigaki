@@ -5,6 +5,8 @@ type BaseProps = {
   children: ReactNode;
   className?: string;
   variant?: "primary" | "ghost";
+  /** 結果ページCTA向け：控えめなホバー拡大 */
+  microInteraction?: boolean;
 };
 
 type LuxuryButtonProps =
@@ -25,11 +27,12 @@ function cx(...parts: Array<string | false | undefined>) {
 }
 
 export function LuxuryButton(props: LuxuryButtonProps) {
-  const { children, className, variant = "primary" } = props;
+  const { children, className, variant = "primary", microInteraction = false } =
+    props;
 
   const base =
     variant === "primary"
-      ? "ui-button-primary pointer-events-auto"
+      ? `ui-button-primary pointer-events-auto${microInteraction ? " ui-button-primary-micro" : ""}`
       : "inline-flex pointer-events-auto items-center text-sm tracking-[0.16em] text-muted transition-colors duration-300 hover:text-ivory-soft";
 
   if ("href" in props && props.href) {
