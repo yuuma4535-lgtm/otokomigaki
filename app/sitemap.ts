@@ -6,6 +6,7 @@ const BASE_URL = "https://otokomigaki-delta.vercel.app";
 const ROUTES = [
   { path: "/", changeFrequency: "weekly" as const, priority: 1 },
   { path: "/diagnose", changeFrequency: "monthly" as const, priority: 0.9 },
+  { path: "/calculator", changeFrequency: "monthly" as const, priority: 0.8 },
   { path: "/result", changeFrequency: "monthly" as const, priority: 0.7 },
   { path: "/terms", changeFrequency: "yearly" as const, priority: 0.3 },
   { path: "/privacy", changeFrequency: "yearly" as const, priority: 0.3 },
