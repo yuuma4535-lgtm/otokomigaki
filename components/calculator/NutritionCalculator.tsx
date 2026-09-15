@@ -95,12 +95,29 @@ export function NutritionCalculator() {
     useState<MicronutrientCategoryId | null>("fatSoluble");
   const [runId, setRunId] = useState(0);
   const timerRef = useRef<number | null>(null);
+  const resultTopRef = useRef<HTMLElement>(null);
+  const shouldScrollToResultRef = useRef(false);
 
   useEffect(() => {
     return () => {
       if (timerRef.current !== null) window.clearTimeout(timerRef.current);
     };
   }, []);
+
+  useEffect(() => {
+    if (!result || calculating || !shouldScrollToResultRef.current) return;
+    shouldScrollToResultRef.current = false;
+
+    const frame = window.requestAnimationFrame(() => {
+      const el = resultTopRef.current;
+      if (!el) return;
+      const top =
+        el.getBoundingClientRect().top + window.scrollY - 28;
+      window.scrollTo({ top: Math.max(top, 0), behavior: "smooth" });
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [result, calculating, runId]);
 
   const menus = useMemo(
     () => (result ? buildMenuExamples(result) : []),
@@ -172,6 +189,7 @@ export function NutritionCalculator() {
     setOpenMicroCategory("fatSoluble");
     setCalculating(true);
     timerRef.current = window.setTimeout(() => {
+      shouldScrollToResultRef.current = true;
       setResult(next);
       setResultProfile(profile);
       setRunId((id) => id + 1);
@@ -340,7 +358,12 @@ export function NutritionCalculator() {
         ) : null}
 
         {result && macroKcal ? (
-          <section key={runId} className="mt-12 space-y-8" aria-live="polite">
+          <section
+            key={runId}
+            ref={resultTopRef}
+            className="mt-12 space-y-8"
+            aria-live="polite"
+          >
             <SoftReveal>
               <div className={`${RESULT_CARD} p-6 sm:p-8`}>
               <p className="text-xs tracking-[0.14em] text-[#8a847b]">1日の目標カロリー</p>
