@@ -256,6 +256,17 @@ export function ResultView() {
               >
                 ココナラで相談する
               </LuxuryButton>
+              <div className="flex w-full flex-col items-center gap-2.5 pt-1">
+                <p className="text-xs leading-[1.8] tracking-wide text-muted-dim">
+                  まずは自分の数字を知りたい方へ
+                </p>
+                <Link
+                  href="/calculator"
+                  className="inline-flex w-full max-w-full items-center justify-center rounded-sm border border-gold/35 bg-transparent px-4 py-3.5 text-sm tracking-[0.12em] text-gold-soft/90 transition-[border-color,background-color,color] duration-300 hover:border-gold/55 hover:bg-gold/8 hover:text-gold-soft"
+                >
+                  無料のPFC・カロリー計算機を使う
+                </Link>
+              </div>
               <LuxuryButton href="/" variant="ghost">
                 もう一度診断する
               </LuxuryButton>
