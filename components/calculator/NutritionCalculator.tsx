@@ -19,7 +19,10 @@ import {
   type Sex,
 } from "@/lib/nutrition/calculate";
 import { buildMenuExamples } from "@/lib/nutrition/menus";
-import { getMicronutrientTargets } from "@/lib/nutrition/micronutrients";
+import {
+  getMicronutrientCategories,
+  type MicronutrientCategoryId,
+} from "@/lib/nutrition/micronutrients";
 
 const GOLD = "#b8943d";
 
@@ -88,6 +91,8 @@ export function NutritionCalculator() {
     activity: ActivityLevel;
   } | null>(null);
   const [microOpen, setMicroOpen] = useState(false);
+  const [openMicroCategory, setOpenMicroCategory] =
+    useState<MicronutrientCategoryId | null>("fatSoluble");
   const [runId, setRunId] = useState(0);
   const timerRef = useRef<number | null>(null);
 
@@ -102,10 +107,10 @@ export function NutritionCalculator() {
     [result],
   );
 
-  const micronutrients = useMemo(
+  const microCategories = useMemo(
     () =>
       resultProfile
-        ? getMicronutrientTargets(
+        ? getMicronutrientCategories(
             resultProfile.sex,
             resultProfile.age,
             resultProfile.activity,
@@ -164,6 +169,7 @@ export function NutritionCalculator() {
     setResult(null);
     setResultProfile(null);
     setMicroOpen(false);
+    setOpenMicroCategory("fatSoluble");
     setCalculating(true);
     timerRef.current = window.setTimeout(() => {
       setResult(next);
@@ -458,43 +464,94 @@ export function NutritionCalculator() {
                   style={{ gridTemplateRows: microOpen ? "1fr" : "0fr" }}
                 >
                   <div className="overflow-hidden">
-                    <ul className="mt-6 grid gap-3 sm:grid-cols-2">
-                      {micronutrients.map((item) => (
-                        <li
-                          key={item.id}
-                          className="rounded-xl bg-[#f7f5f1] px-4 py-4"
-                        >
-                          <div className="flex items-start gap-3">
-                            <span
-                              className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[0.65rem] font-semibold text-white"
-                              style={{ backgroundColor: item.accent }}
-                              aria-hidden
+                    <div className="mt-6 space-y-2">
+                      {microCategories.map((category) => {
+                        const isOpen = openMicroCategory === category.id;
+                        return (
+                          <div
+                            key={category.id}
+                            className="overflow-hidden rounded-xl border border-[#efece6] bg-[#fafaf8]"
+                          >
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setOpenMicroCategory((current) =>
+                                  current === category.id ? null : category.id,
+                                )
+                              }
+                              aria-expanded={isOpen}
+                              className="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left touch-manipulation"
                             >
-                              {item.mark}
-                            </span>
-                            <div className="min-w-0 flex-1">
-                              <div className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-1">
-                                <p className="text-sm font-semibold text-[#1a1917]">
-                                  {item.name}
-                                </p>
-                                <p className="text-sm font-semibold tabular-nums text-[#1a1917]">
-                                  {item.amount}
-                                  <span className="ml-0.5 text-xs font-medium text-[#6f6a62]">
-                                    {item.unit}
-                                  </span>
-                                  <span className="ml-1 text-[0.65rem] font-normal text-[#8a847b]">
-                                    /日
-                                  </span>
-                                </p>
+                              <span className="text-sm font-semibold text-[#1a1917]">
+                                {category.label}
+                              </span>
+                              <span className="flex items-center gap-2 text-xs text-[#8a847b]">
+                                {category.items.length}項目
+                                <span
+                                  className="inline-block transition-transform duration-300"
+                                  style={{
+                                    transform: isOpen
+                                      ? "rotate(180deg)"
+                                      : "rotate(0deg)",
+                                  }}
+                                  aria-hidden
+                                >
+                                  ▾
+                                </span>
+                              </span>
+                            </button>
+                            <div
+                              className="grid transition-[grid-template-rows] duration-[350ms] ease-out"
+                              style={{
+                                gridTemplateRows: isOpen ? "1fr" : "0fr",
+                              }}
+                            >
+                              <div className="overflow-hidden">
+                                <ul className="space-y-2 border-t border-[#efece6] px-3 py-3 sm:grid sm:grid-cols-2 sm:gap-2 sm:space-y-0">
+                                  {category.items.map((item) => (
+                                    <li
+                                      key={item.id}
+                                      className="rounded-xl bg-white px-3.5 py-3.5 shadow-[0_1px_0_rgba(60,48,24,0.04)]"
+                                    >
+                                      <div className="flex items-start gap-3">
+                                        <span
+                                          className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[0.6rem] font-semibold text-white"
+                                          style={{
+                                            backgroundColor: item.accent,
+                                          }}
+                                          aria-hidden
+                                        >
+                                          {item.mark}
+                                        </span>
+                                        <div className="min-w-0 flex-1">
+                                          <div className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-1">
+                                            <p className="text-sm font-semibold leading-snug text-[#1a1917]">
+                                              {item.name}
+                                            </p>
+                                            <p className="text-sm font-semibold tabular-nums text-[#1a1917]">
+                                              {item.amount}
+                                              <span className="ml-0.5 text-xs font-medium text-[#6f6a62]">
+                                                {item.unit}
+                                              </span>
+                                              <span className="ml-1 text-[0.65rem] font-normal text-[#8a847b]">
+                                                /日
+                                              </span>
+                                            </p>
+                                          </div>
+                                          <p className="mt-1.5 text-xs leading-relaxed text-[#6f6a62]">
+                                            {item.why}
+                                          </p>
+                                        </div>
+                                      </div>
+                                    </li>
+                                  ))}
+                                </ul>
                               </div>
-                              <p className="mt-1.5 text-xs leading-relaxed text-[#6f6a62]">
-                                {item.why}
-                              </p>
                             </div>
                           </div>
-                        </li>
-                      ))}
-                    </ul>
+                        );
+                      })}
+                    </div>
                     <p className="mt-5 text-xs leading-relaxed text-[#8a847b]">
                       ミクロ栄養素の推奨量は一般的な目安であり、個人の健康状態によって必要量は異なります。持病がある方や妊娠中の方は医師にご相談ください。
                     </p>
