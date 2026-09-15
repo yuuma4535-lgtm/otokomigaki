@@ -9,6 +9,8 @@ export type MenuExample = {
   id: string;
   title: string;
   note: string;
+  /** 代表的なミクロ栄養素の補足（精密計算ではない） */
+  microHighlights: string[];
   meals: MenuMeal[];
   kcal: number;
   proteinG: number;
@@ -257,6 +259,7 @@ function toMenu(
   id: string,
   title: string,
   note: string,
+  microHighlights: string[],
   lines: Line[],
 ): MenuExample {
   const total = sum(lines);
@@ -264,6 +267,7 @@ function toMenu(
     id,
     title,
     note,
+    microHighlights,
     meals: MEALS.map((meal) => ({
       label: meal,
       items: lines
@@ -393,18 +397,33 @@ export function buildMenuExamples(result: NutritionResult): MenuExample[] {
       "washoku",
       "和食の定番",
       "ご飯・魚・卵を軸に、足りない脂質は炒め油とアボカドで補っています。",
+      [
+        "鮭はビタミンDが豊富です",
+        "納豆はビタミンK・食物繊維の補給に役立ちます",
+        "卵はビタミンB群のサポートになります",
+      ],
       washoku,
     ),
     toMenu(
       "simple",
       "かんたん自炊",
       "さば缶と豚肉に、くるみとオリーブオイルを足して脂質量を目標に近づけています。",
+      [
+        "さば缶はビタミンD・カルシウムの補給に向きます",
+        "くるみはマグネシウム・亜鉛の補強に役立ちます",
+        "豚肉はビタミンB1を摂りやすい食材です",
+      ],
       simple,
     ),
     toMenu(
       "balanced",
       "バランス重視",
       "皮なし鶏むねを軸に、油・アボカド・くるみで脂質を目標量へ合わせています。",
+      [
+        "ブロッコリーはビタミンC・食物繊維が豊富です",
+        "鮭はビタミンDが豊富です",
+        "アボカドはマグネシウムや食物繊維の補足になります",
+      ],
       balanced,
     ),
   ];

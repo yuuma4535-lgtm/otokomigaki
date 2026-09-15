@@ -19,6 +19,7 @@ import {
   type Sex,
 } from "@/lib/nutrition/calculate";
 import { buildMenuExamples } from "@/lib/nutrition/menus";
+import { getMicronutrientTargets } from "@/lib/nutrition/micronutrients";
 
 const GOLD = "#b8943d";
 
@@ -81,6 +82,12 @@ export function NutritionCalculator() {
   const [error, setError] = useState<string | null>(null);
   const [calculating, setCalculating] = useState(false);
   const [result, setResult] = useState<NutritionResult | null>(null);
+  const [resultProfile, setResultProfile] = useState<{
+    sex: Sex;
+    age: number;
+    activity: ActivityLevel;
+  } | null>(null);
+  const [microOpen, setMicroOpen] = useState(false);
   const [runId, setRunId] = useState(0);
   const timerRef = useRef<number | null>(null);
 
@@ -93,6 +100,18 @@ export function NutritionCalculator() {
   const menus = useMemo(
     () => (result ? buildMenuExamples(result) : []),
     [result],
+  );
+
+  const micronutrients = useMemo(
+    () =>
+      resultProfile
+        ? getMicronutrientTargets(
+            resultProfile.sex,
+            resultProfile.age,
+            resultProfile.activity,
+          )
+        : [],
+    [resultProfile],
   );
 
   const macroKcal = result
@@ -115,11 +134,13 @@ export function NutritionCalculator() {
     if (!form.sex || !form.activity || !form.goal || age == null || heightCm == null || weightKg == null) {
       setError("すべての項目を入力してください。");
       setResult(null);
+      setResultProfile(null);
       return;
     }
     if (age < 15 || age > 80 || heightCm < 120 || heightCm > 230 || weightKg < 30 || weightKg > 200) {
       setError("年齢・身長・体重が一般的な範囲を外れています。数値を確認してください。");
       setResult(null);
+      setResultProfile(null);
       setCalculating(false);
       return;
     }
@@ -132,13 +153,21 @@ export function NutritionCalculator() {
       activity: form.activity,
       goal: form.goal,
     });
+    const profile = {
+      sex: form.sex,
+      age,
+      activity: form.activity,
+    };
 
     if (timerRef.current !== null) window.clearTimeout(timerRef.current);
     setError(null);
     setResult(null);
+    setResultProfile(null);
+    setMicroOpen(false);
     setCalculating(true);
     timerRef.current = window.setTimeout(() => {
       setResult(next);
+      setResultProfile(profile);
       setRunId((id) => id + 1);
       setCalculating(false);
       timerRef.current = null;
@@ -372,6 +401,18 @@ export function NutritionCalculator() {
                       </p>
                     </div>
                     <p className="mt-1 text-xs text-[#8a847b]">{menu.note}</p>
+                    {menu.microHighlights.length > 0 ? (
+                      <ul className="mt-3 space-y-1 border-t border-[#efece6] pt-3">
+                        {menu.microHighlights.map((tip) => (
+                          <li
+                            key={tip}
+                            className="text-xs leading-relaxed text-[#6f6a62]"
+                          >
+                            · {tip}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
                     <div className="mt-4 grid gap-3 sm:grid-cols-3">
                       {menu.meals.map((meal) => (
                         <div key={meal.label}>
@@ -390,6 +431,77 @@ export function NutritionCalculator() {
                 ))}
               </ul>
             </div>
+
+            <SoftReveal>
+              <div className={`${RESULT_CARD} p-6 sm:p-8`}>
+                <div className="flex flex-wrap items-end justify-between gap-3">
+                  <div>
+                    <h2 className="text-base font-semibold text-[#1a1917]">
+                      ミクロ栄養素の目安
+                    </h2>
+                    <p className="mt-2 text-sm leading-relaxed text-[#5c574f]">
+                      性別・年齢に基づく、ビタミン・ミネラル・食物繊維の1日の目安量です。必要な方だけ詳しく確認できます。
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setMicroOpen((open) => !open)}
+                    aria-expanded={microOpen}
+                    className="rounded-xl border border-[#d8c79a] bg-white px-4 py-2 text-sm font-medium text-[#6d5824] transition-colors hover:border-[#b8943d]"
+                  >
+                    {microOpen ? "閉じる" : "詳しく見る"}
+                  </button>
+                </div>
+
+                <div
+                  className="grid transition-[grid-template-rows] duration-[350ms] ease-out"
+                  style={{ gridTemplateRows: microOpen ? "1fr" : "0fr" }}
+                >
+                  <div className="overflow-hidden">
+                    <ul className="mt-6 grid gap-3 sm:grid-cols-2">
+                      {micronutrients.map((item) => (
+                        <li
+                          key={item.id}
+                          className="rounded-xl bg-[#f7f5f1] px-4 py-4"
+                        >
+                          <div className="flex items-start gap-3">
+                            <span
+                              className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[0.65rem] font-semibold text-white"
+                              style={{ backgroundColor: item.accent }}
+                              aria-hidden
+                            >
+                              {item.mark}
+                            </span>
+                            <div className="min-w-0 flex-1">
+                              <div className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-1">
+                                <p className="text-sm font-semibold text-[#1a1917]">
+                                  {item.name}
+                                </p>
+                                <p className="text-sm font-semibold tabular-nums text-[#1a1917]">
+                                  {item.amount}
+                                  <span className="ml-0.5 text-xs font-medium text-[#6f6a62]">
+                                    {item.unit}
+                                  </span>
+                                  <span className="ml-1 text-[0.65rem] font-normal text-[#8a847b]">
+                                    /日
+                                  </span>
+                                </p>
+                              </div>
+                              <p className="mt-1.5 text-xs leading-relaxed text-[#6f6a62]">
+                                {item.why}
+                              </p>
+                            </div>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                    <p className="mt-5 text-xs leading-relaxed text-[#8a847b]">
+                      ミクロ栄養素の推奨量は一般的な目安であり、個人の健康状態によって必要量は異なります。持病がある方や妊娠中の方は医師にご相談ください。
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </SoftReveal>
 
             <p className="text-xs leading-relaxed text-[#8a847b]">
               この計算結果は一般的な目安であり、医学的なアドバイスではありません。持病や体調に不安がある場合は、医師や管理栄養士にご相談ください。
