@@ -1,7 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState, type FormEvent } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type FormEvent,
+  type ReactNode,
+} from "react";
+import { useInViewOnce } from "@/lib/hooks/use-in-view-once";
 import { COCONALA_URL } from "@/lib/diagnosis/constants";
 import {
   calculateNutrition,
@@ -45,6 +53,23 @@ const EMPTY: FormState = {
   goal: "",
 };
 
+const LOADING_MS = 1750;
+const COUNT_MS = 1000;
+
+const RESULT_CARD =
+  "rounded-2xl border border-[#f3efe6] bg-gradient-to-b from-white to-[#f6f3ec] shadow-[8px_12px_28px_-18px_rgba(60,48,24,0.32),-6px_-6px_18px_rgba(255,255,255,0.9)]";
+
+const CHOICE_BASE =
+  "cursor-pointer rounded-xl border px-4 py-3 text-sm transition-[transform,background-color,border-color,color] duration-300 ease-out";
+
+function choiceClass(selected: boolean, extra = "") {
+  return `${CHOICE_BASE} ${extra} ${
+    selected
+      ? "scale-[1.03] border-[#b8943d] bg-[#fbf7ee] text-[#1a1917]"
+      : "scale-100 border-[#e6e2da] bg-[#fafaf8] text-[#4a453e]"
+  }`;
+}
+
 function parsePositive(value: string): number | null {
   const n = Number(value);
   if (!Number.isFinite(n) || n <= 0) return null;
@@ -54,7 +79,16 @@ function parsePositive(value: string): number | null {
 export function NutritionCalculator() {
   const [form, setForm] = useState<FormState>(EMPTY);
   const [error, setError] = useState<string | null>(null);
+  const [calculating, setCalculating] = useState(false);
   const [result, setResult] = useState<NutritionResult | null>(null);
+  const [runId, setRunId] = useState(0);
+  const timerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current !== null) window.clearTimeout(timerRef.current);
+    };
+  }, []);
 
   const menus = useMemo(
     () => (result ? buildMenuExamples(result) : []),
@@ -86,20 +120,29 @@ export function NutritionCalculator() {
     if (age < 15 || age > 80 || heightCm < 120 || heightCm > 230 || weightKg < 30 || weightKg > 200) {
       setError("年齢・身長・体重が一般的な範囲を外れています。数値を確認してください。");
       setResult(null);
+      setCalculating(false);
       return;
     }
 
+    const next = calculateNutrition({
+      sex: form.sex,
+      age,
+      heightCm,
+      weightKg,
+      activity: form.activity,
+      goal: form.goal,
+    });
+
+    if (timerRef.current !== null) window.clearTimeout(timerRef.current);
     setError(null);
-    setResult(
-      calculateNutrition({
-        sex: form.sex,
-        age,
-        heightCm,
-        weightKg,
-        activity: form.activity,
-        goal: form.goal,
-      }),
-    );
+    setResult(null);
+    setCalculating(true);
+    timerRef.current = window.setTimeout(() => {
+      setResult(next);
+      setRunId((id) => id + 1);
+      setCalculating(false);
+      timerRef.current = null;
+    }, LOADING_MS);
   };
 
   return (
@@ -145,11 +188,7 @@ export function NutritionCalculator() {
               ).map(([id, label]) => (
                 <label
                   key={id}
-                  className={`cursor-pointer rounded-xl border px-4 py-3 text-center text-sm transition-colors ${
-                    form.sex === id
-                      ? "border-[#b8943d] bg-[#fbf7ee] text-[#1a1917]"
-                      : "border-[#e6e2da] bg-[#fafaf8] text-[#4a453e]"
-                  }`}
+                  className={choiceClass(form.sex === id, "text-center")}
                 >
                   <input
                     type="radio"
@@ -192,11 +231,7 @@ export function NutritionCalculator() {
               {ACTIVITY_OPTIONS.map((option) => (
                 <label
                   key={option.id}
-                  className={`cursor-pointer rounded-xl border px-4 py-3 text-sm transition-colors ${
-                    form.activity === option.id
-                      ? "border-[#b8943d] bg-[#fbf7ee]"
-                      : "border-[#e6e2da] bg-[#fafaf8]"
-                  }`}
+                  className={choiceClass(form.activity === option.id)}
                 >
                   <input
                     type="radio"
@@ -223,11 +258,7 @@ export function NutritionCalculator() {
               {GOAL_OPTIONS.map((option) => (
                 <label
                   key={option.id}
-                  className={`cursor-pointer rounded-xl border px-3 py-3 text-center text-sm transition-colors ${
-                    form.goal === option.id
-                      ? "border-[#b8943d] bg-[#fbf7ee] text-[#1a1917]"
-                      : "border-[#e6e2da] bg-[#fafaf8] text-[#4a453e]"
-                  }`}
+                  className={choiceClass(form.goal === option.id, "px-3 text-center")}
                 >
                   <input
                     type="radio"
@@ -251,19 +282,35 @@ export function NutritionCalculator() {
 
           <button
             type="submit"
-            className="mt-7 w-full rounded-xl px-4 py-3.5 text-sm font-semibold tracking-wide text-[#1a160e] transition-transform duration-200 hover:scale-[1.01] active:scale-[0.99]"
+            disabled={calculating}
+            className="mt-7 w-full rounded-xl px-4 py-3.5 text-sm font-semibold tracking-wide text-[#1a160e] transition-transform duration-200 hover:scale-[1.01] active:scale-[0.99] disabled:cursor-wait disabled:opacity-70"
             style={{ backgroundColor: GOLD }}
           >
             カロリーとPFCを計算する
           </button>
         </form>
 
+        {calculating ? (
+          <div
+            className="mt-12 flex flex-col items-center gap-4 py-10"
+            role="status"
+            aria-live="polite"
+          >
+            <span
+              className="h-8 w-8 animate-spin rounded-full border-2 border-[#e6e2da] border-t-[#b8943d]"
+              aria-hidden
+            />
+            <p className="text-sm text-[#5c574f]">計算中です...</p>
+          </div>
+        ) : null}
+
         {result && macroKcal ? (
-          <section className="mt-12 space-y-8" aria-live="polite">
-            <div className="rounded-2xl border border-[#e6e2da] bg-white p-6 sm:p-8">
+          <section key={runId} className="mt-12 space-y-8" aria-live="polite">
+            <SoftReveal>
+              <div className={`${RESULT_CARD} p-6 sm:p-8`}>
               <p className="text-xs tracking-[0.14em] text-[#8a847b]">1日の目標カロリー</p>
               <p className="mt-2 text-4xl font-semibold tabular-nums tracking-tight text-[#1a1917]">
-                {result.targetKcal.toLocaleString()}
+                <CountUpValue value={result.targetKcal} />
                 <span className="ml-1 text-base font-medium text-[#6f6a62]">kcal</span>
               </p>
               <p className="mt-3 text-sm leading-relaxed text-[#5c574f]">
@@ -274,9 +321,11 @@ export function NutritionCalculator() {
                   : `${result.adjustmentKcal > 0 ? "+" : ""}${result.adjustmentKcal} kcal`}
                 （減量は-300〜500kcal、増量は+300〜500kcalの目安）です。
               </p>
-            </div>
+              </div>
+            </SoftReveal>
 
-            <div className="rounded-2xl border border-[#e6e2da] bg-white p-6 sm:p-8">
+            <SoftReveal>
+              <div className={`${RESULT_CARD} p-6 sm:p-8`}>
               <h2 className="text-base font-semibold text-[#1a1917]">PFCバランスの目安</h2>
               <p className="mt-2 text-sm leading-relaxed text-[#5c574f]">
                 タンパク質は体重1kgあたり{result.proteinPerKg}g（一般的な必要量の目安
@@ -289,45 +338,33 @@ export function NutritionCalculator() {
                 <MacroCard label="C 炭水化物" grams={result.carbG} />
               </div>
 
-              <div className="mt-6">
-                <div className="flex h-3 overflow-hidden rounded-full bg-[#efece6]">
-                  <div
-                    className="h-full"
-                    style={{
-                      width: `${(macroKcal.p / macroTotal) * 100}%`,
-                      backgroundColor: GOLD,
-                    }}
-                  />
-                  <div
-                    className="h-full bg-[#cfc6b6]"
-                    style={{ width: `${(macroKcal.f / macroTotal) * 100}%` }}
-                  />
-                  <div
-                    className="h-full bg-[#e7e1d6]"
-                    style={{ width: `${(macroKcal.c / macroTotal) * 100}%` }}
-                  />
-                </div>
+              <PfcBar
+                protein={macroKcal.p / macroTotal}
+                fat={macroKcal.f / macroTotal}
+                carb={macroKcal.c / macroTotal}
+              />
                 <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-[#6f6a62]">
                   <li>タンパク質 {Math.round((macroKcal.p / macroTotal) * 100)}%</li>
                   <li>脂質 {Math.round((macroKcal.f / macroTotal) * 100)}%</li>
                   <li>炭水化物 {Math.round((macroKcal.c / macroTotal) * 100)}%</li>
                 </ul>
               </div>
-            </div>
+            </SoftReveal>
 
             <div>
-              <h2 className="text-base font-semibold text-[#1a1917]">
-                計算結果に近い、1日のメニュー例
-              </h2>
-              <p className="mt-2 text-sm leading-relaxed text-[#5c574f]">
-                目安量に合わせて分量を調整した、シンプルな日本の食事です。味つけや食材の置き換えで前後します。
-              </p>
+              <SoftReveal>
+                <h2 className="text-base font-semibold text-[#1a1917]">
+                  計算結果に近い、1日のメニュー例
+                </h2>
+                <p className="mt-2 text-sm leading-relaxed text-[#5c574f]">
+                  目安量に合わせて分量を調整した、シンプルな日本の食事です。味つけや食材の置き換えで前後します。
+                </p>
+              </SoftReveal>
               <ul className="mt-5 space-y-4">
                 {menus.map((menu) => (
-                  <li
-                    key={menu.id}
-                    className="rounded-2xl border border-[#e6e2da] bg-white p-5 sm:p-6"
-                  >
+                  <li key={menu.id}>
+                    <SoftReveal>
+                    <div className={`${RESULT_CARD} p-5 sm:p-6`}>
                     <div className="flex flex-wrap items-baseline justify-between gap-2">
                       <h3 className="text-sm font-semibold text-[#1a1917]">{menu.title}</h3>
                       <p className="text-xs tabular-nums text-[#6f6a62]">
@@ -347,6 +384,8 @@ export function NutritionCalculator() {
                         </div>
                       ))}
                     </div>
+                    </div>
+                    </SoftReveal>
                   </li>
                 ))}
               </ul>
@@ -429,9 +468,82 @@ function MacroCard({
         className="mt-1 text-xl font-semibold tabular-nums"
         style={{ color: tone === "gold" ? GOLD : "#2a2824" }}
       >
-        {grams}
+        <CountUpValue value={grams} />
         <span className="ml-0.5 text-xs font-medium text-[#6f6a62]">g</span>
       </p>
+    </div>
+  );
+}
+
+function CountUpValue({ value }: { value: number }) {
+  const { ref, inView } = useInViewOnce<HTMLSpanElement>();
+  const [display, setDisplay] = useState(0);
+
+  useEffect(() => {
+    if (!inView) return;
+    let raf = 0;
+    const start = performance.now();
+    const tick = (now: number) => {
+      const progress = Math.min((now - start) / COUNT_MS, 1);
+      const eased = 1 - (1 - progress) ** 3;
+      setDisplay(Math.round(value * eased));
+      if (progress < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [inView, value]);
+
+  return (
+    <span ref={ref}>
+      {display.toLocaleString()}
+    </span>
+  );
+}
+
+function PfcBar({
+  protein,
+  fat,
+  carb,
+}: {
+  protein: number;
+  fat: number;
+  carb: number;
+}) {
+  const { ref, inView } = useInViewOnce<HTMLDivElement>();
+
+  return (
+    <div ref={ref} className="mt-6">
+      <div className="h-3 overflow-hidden rounded-full bg-[#efece6]">
+        <div
+          className="flex h-full origin-left"
+          style={{
+            transform: inView ? "scaleX(1)" : "scaleX(0)",
+            transition: "transform 0.8s cubic-bezier(0, 0, 0.2, 1)",
+          }}
+        >
+          <div className="h-full" style={{ width: `${protein * 100}%`, backgroundColor: GOLD }} />
+          <div className="h-full bg-[#cfc6b6]" style={{ width: `${fat * 100}%` }} />
+          <div className="h-full bg-[#e7e1d6]" style={{ width: `${carb * 100}%` }} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SoftReveal({ children }: { children: ReactNode }) {
+  const { ref, inView } = useInViewOnce<HTMLDivElement>();
+
+  return (
+    <div
+      ref={ref}
+      style={{
+        opacity: inView ? 1 : 0,
+        transform: inView ? "translateY(0)" : "translateY(22px)",
+        transition:
+          "opacity 0.7s cubic-bezier(0, 0, 0.2, 1), transform 0.7s cubic-bezier(0, 0, 0.2, 1)",
+      }}
+    >
+      {children}
     </div>
   );
 }
