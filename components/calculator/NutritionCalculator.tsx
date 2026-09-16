@@ -223,7 +223,7 @@ export function NutritionCalculator() {
           PFC・カロリー計算機
         </h1>
         <p className="mt-4 max-w-xl text-sm leading-[1.9] text-[#5c574f] sm:text-base">
-          性別・年齢・活動量から、タンパク質の必要量と1日の目標カロリーを無料でチェックできます。結果に近い、シンプルな日本食のメニュー例も表示します。
+          PFC・カロリーだけでなく、ビタミン・ミネラルまで無料でチェックできる栄養計算ツールです。計算結果に近い、実践しやすい1日のメニュー例も一緒に確認できます。
         </p>
 
         <form
